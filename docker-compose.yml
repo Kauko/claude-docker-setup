@@ -1,0 +1,172 @@
+# Shared configuration anchors
+x-security-defaults: &security-defaults
+  tmpfs:
+    - /tmp:size=1G
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN           # For file ownership changes
+    - DAC_OVERRIDE    # For file permission overrides (needed for --dangerously-skip-permissions)
+    - FOWNER          # For file operations
+    - SETGID          # For group operations
+    - SETUID          # For user operations
+
+x-volume-defaults: &volume-defaults
+  # Claude's configuration: Read-only (install plugins outside container)
+  - ${HOME}/.claude:/home/node/.claude:ro
+
+  # Your project directory: FULL ACCESS (read-write)
+  # Add :delegated for better macOS performance
+  - .:/workspace:rw,delegated
+
+x-environment-defaults: &environment-defaults
+  # Pass through your API key
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+
+  # Git configuration (required for commits)
+  GIT_AUTHOR_NAME: ${GIT_AUTHOR_NAME:-Claude Code}
+  GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL:-claude@container}
+  GIT_COMMITTER_NAME: ${GIT_COMMITTER_NAME:-Claude Code}
+  GIT_COMMITTER_EMAIL: ${GIT_COMMITTER_EMAIL:-claude@container}
+
+  # Claude flags (can be overridden)
+  CLAUDE_FLAGS: ${CLAUDE_FLAGS:---dangerously-skip-permissions}
+
+services:
+  claude:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Platform specification (M1 Mac)
+    platform: linux/arm64
+
+    # Run as host user to avoid permission issues
+    # macOS users typically have UID 501
+    user: "${UID:-501}:${GID:-20}"
+
+    working_dir: /workspace
+
+    volumes: *volume-defaults
+
+    environment: *environment-defaults
+
+    # Interactive terminal support
+    stdin_open: true
+    tty: true
+
+    # Apply shared security settings
+    <<: *security-defaults
+
+    # Resource limits for safety
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          memory: 512M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Health check for debugging
+    healthcheck:
+      test: ["CMD", "claude", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+    # Never restart (run-once container)
+    restart: "no"
+
+    # Default command with configurable flags
+    command:
+      - bash
+      - -c
+      - |
+        echo "🐳 Claude Code Container (M1 Mac optimized)"
+        echo "📂 Project: /workspace (full read-write access)"
+        echo "🔧 Config: ~/.claude (read-only)"
+        echo "⚙️  Flags: $${CLAUDE_FLAGS}"
+        echo ""
+        exec claude $${CLAUDE_FLAGS}
+
+  # Alternative: Run with bash for manual exploration
+  bash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    platform: linux/arm64
+    user: "${UID:-501}:${GID:-20}"
+    working_dir: /workspace
+
+    volumes: *volume-defaults
+    environment: *environment-defaults
+
+    stdin_open: true
+    tty: true
+
+    <<: *security-defaults
+
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    restart: "no"
+
+    # Override entrypoint for bash access
+    entrypoint: ["/usr/bin/tini", "--"]
+    command: ["bash"]
+
+  # Quick task runner: docker-compose run --rm task "your prompt here"
+  task:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    platform: linux/arm64
+    user: "${UID:-501}:${GID:-20}"
+    working_dir: /workspace
+
+    volumes: *volume-defaults
+    environment: *environment-defaults
+
+    stdin_open: true
+    tty: true
+
+    <<: *security-defaults
+
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    restart: "no"
+
+    # Entrypoint allows passing prompt as argument
+    entrypoint: ["/usr/bin/tini", "--", "claude"]
+    command: ["--help"]  # Default if no args provided

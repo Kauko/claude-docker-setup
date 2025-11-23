@@ -1,0 +1,57 @@
+# Don't include these in Docker build context
+
+# Claude config
+.claude/
+
+# Git files
+.git/
+.gitignore
+
+# Secrets and credentials
+.env
+.env.*
+secrets/
+*.key
+*.pem
+.anthropic/
+
+# Docker files (not needed in image)
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile*
+.dockerignore
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.bak
+*~
+
+# Dependencies
+node_modules/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+coverage/
+.cache/
+
+# Python artifacts (if any)
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Test artifacts
+.nyc_output/
+junit.xml
