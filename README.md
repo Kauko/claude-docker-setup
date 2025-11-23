@@ -14,73 +14,101 @@ A production-ready Docker setup for running Claude Code in a containerized envir
 
 ### Installation
 
-#### Option 1: Using Fish Function (Recommended)
+#### Option 1: Git Submodule (Recommended)
 
-Add this to your `~/.config/fish/config.fish`:
+Add this Docker setup as a git submodule in your project:
 
-```fish
-function claude-docker-init
-    set repo_url "https://github.com/YOUR_USERNAME/claude-docker-setup"
-
-    echo "🐳 Initializing Claude Docker setup from GitHub..."
-
-    curl -sL "$repo_url/archive/main.tar.gz" | tar xz --strip-components=1 claude-docker-setup-main/{Dockerfile,docker-compose.yml,.dockerignore,setup-docker.sh,.env.example,README.docker.md}
-
-    chmod +x setup-docker.sh
-
-    echo "✅ Files downloaded from $repo_url"
-    echo ""
-    echo "Next steps:"
-    echo "  1. ./setup-docker.sh"
-    echo "  2. Add ANTHROPIC_API_KEY to .env"
-    echo "  3. docker-compose build"
-    echo "  4. docker-compose run --rm claude"
-end
-```
-
-Then in any project:
 ```bash
 cd ~/code/my-project
-claude-docker-init
+git submodule add git@github.com:teemukaukoranta/claude-docker-setup.git .docker
+cd .docker
+./setup-docker.sh
+```
+
+Update the `.env` file with your API key:
+```bash
+echo "ANTHROPIC_API_KEY=your-key-here" >> .docker/.env
+```
+
+Build and run:
+```bash
+docker-compose -f .docker/docker-compose.yml build
+docker-compose -f .docker/docker-compose.yml run --rm claude
+```
+
+**Benefits:**
+- Version locked to a specific commit
+- Updates easily with `git submodule update --remote`
+- No files pollute your project root
+- Git tracks the exact Docker setup version
+
+**Optional:** Create aliases for convenience:
+```bash
+# Add to ~/.config/fish/config.fish or ~/.bashrc
+alias claude-docker="docker-compose -f .docker/docker-compose.yml run --rm claude"
+alias claude-docker-build="docker-compose -f .docker/docker-compose.yml build"
+```
+
+#### Option 2: Manual Download (Alternative)
+
+If you prefer not to use git submodules, download files directly:
+
+```bash
+cd ~/code/my-project
+curl -sL https://github.com/teemukaukoranta/claude-docker-setup/archive/main.tar.gz | \
+  tar xz --strip-components=1 claude-docker-setup-main/{Dockerfile,docker-compose.yml,.dockerignore,setup-docker.sh,.env.example,README.docker.md}
+chmod +x setup-docker.sh
 ./setup-docker.sh
 docker-compose build
 docker-compose run --rm claude
 ```
 
-#### Option 2: Manual Download
-
-```bash
-cd ~/code/my-project
-curl -sL https://github.com/YOUR_USERNAME/claude-docker-setup/archive/main.tar.gz | tar xz --strip-components=1
-./setup-docker.sh
-docker-compose build
-docker-compose run --rm claude
+**Note:** With this approach, add these files to your `.gitignore`:
+```gitignore
+# Claude Docker setup
+Dockerfile
+docker-compose.yml
+.dockerignore
+setup-docker.sh
+.env
+.env.example
+README.docker.md
 ```
 
 ## Usage
 
+If using git submodule approach, prefix commands with `-f .docker/docker-compose.yml`:
+
 ### Interactive Session
 ```bash
+# With submodule
+docker-compose -f .docker/docker-compose.yml run --rm claude
+
+# With manual download (files in root)
 docker-compose run --rm claude
 ```
 
 ### One-off Task
 ```bash
+# With submodule
+docker-compose -f .docker/docker-compose.yml run --rm task "analyze this codebase"
+
+# With manual download
 docker-compose run --rm task "analyze this codebase"
 ```
 
 ### Custom Flags
 ```bash
 # Without --dangerously-skip-permissions
-CLAUDE_FLAGS="" docker-compose run --rm claude
+CLAUDE_FLAGS="" docker-compose -f .docker/docker-compose.yml run --rm claude
 
 # With different flags
-CLAUDE_FLAGS="--verbose" docker-compose run --rm claude
+CLAUDE_FLAGS="--verbose" docker-compose -f .docker/docker-compose.yml run --rm claude
 ```
 
 ### Manual Exploration
 ```bash
-docker-compose run --rm bash
+docker-compose -f .docker/docker-compose.yml run --rm bash
 ```
 
 ## Configuration
@@ -119,11 +147,45 @@ GIT_AUTHOR_EMAIL=claude@container
 - Init system (tini) for proper signal handling
 - Read-only plugin directory
 
+## Updating the Docker Setup
+
+### If Using Git Submodule
+
+Pull the latest changes from the submodule:
+
+```bash
+cd ~/code/my-project
+git submodule update --remote .docker
+cd .docker
+./setup-docker.sh  # Regenerate .env if needed
+docker-compose -f .docker/docker-compose.yml build --no-cache
+```
+
+Commit the submodule update:
+
+```bash
+git add .docker
+git commit -m "Update Docker setup to latest version"
+```
+
+### If Using Manual Download
+
+Re-download and replace files (backup your `.env` first):
+
+```bash
+cp .env .env.backup
+curl -sL https://github.com/teemukaukoranta/claude-docker-setup/archive/main.tar.gz | \
+  tar xz --strip-components=1 claude-docker-setup-main/{Dockerfile,docker-compose.yml,.dockerignore,setup-docker.sh,.env.example,README.docker.md}
+mv .env.backup .env
+docker-compose build --no-cache
+```
+
 ## Requirements
 
 - macOS (M1/M2/M3)
 - Docker Desktop for Mac
 - Claude Code installed on host (for comparison/plugin management)
+- Git (for submodule approach)
 
 ## Troubleshooting
 
