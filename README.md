@@ -20,7 +20,7 @@ Add this Docker setup as a git submodule in your project:
 
 ```bash
 cd ~/code/my-project
-git submodule add git@github.com:teemukaukoranta/claude-docker-setup.git .docker
+git submodule add git@github.com:Kauko/claude-docker-setup.git .docker
 cd .docker
 ./setup-docker.sh
 ```
@@ -55,7 +55,7 @@ If you prefer not to use git submodules, download files directly:
 
 ```bash
 cd ~/code/my-project
-curl -sL https://github.com/teemukaukoranta/claude-docker-setup/archive/main.tar.gz | \
+curl -sL https://github.com/Kauko/claude-docker-setup/archive/main.tar.gz | \
   tar xz --strip-components=1 claude-docker-setup-main/{Dockerfile,docker-compose.yml,.dockerignore,setup-docker.sh,.env.example,README.docker.md}
 chmod +x setup-docker.sh
 ./setup-docker.sh
@@ -174,7 +174,7 @@ Re-download and replace files (backup your `.env` first):
 
 ```bash
 cp .env .env.backup
-curl -sL https://github.com/teemukaukoranta/claude-docker-setup/archive/main.tar.gz | \
+curl -sL https://github.com/Kauko/claude-docker-setup/archive/main.tar.gz | \
   tar xz --strip-components=1 claude-docker-setup-main/{Dockerfile,docker-compose.yml,.dockerignore,setup-docker.sh,.env.example,README.docker.md}
 mv .env.backup .env
 docker-compose build --no-cache
