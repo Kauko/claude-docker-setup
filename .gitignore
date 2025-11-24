@@ -1,0 +1,15 @@
+# Local environment configuration (contains API keys!)
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Docker build cache (optional)
+.docker/
