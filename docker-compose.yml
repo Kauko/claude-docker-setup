@@ -29,6 +29,9 @@ x-environment-defaults: &environment-defaults
   # Pass through your API key
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
 
+  # Home directory (required when running as custom UID)
+  HOME: /home/node
+
   # Git configuration (required for commits)
   GIT_AUTHOR_NAME: ${GIT_AUTHOR_NAME:-Claude Code}
   GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL:-claude@container}
