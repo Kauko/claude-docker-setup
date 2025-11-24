@@ -17,6 +17,10 @@ x-volume-defaults: &volume-defaults
   # Claude's configuration: Read-only (install plugins outside container)
   - ${HOME}/.claude:/home/node/.claude:ro
 
+  # Log directories: Writable (needed for --verbose and other logging)
+  - ${HOME}/.claude/logs:/home/node/.claude/logs:rw
+  - ${HOME}/.claude/debug:/home/node/.claude/debug:rw
+
   # Your project directory: FULL ACCESS (read-write)
   # Add :delegated for better macOS performance
   - .:/workspace:rw,delegated
